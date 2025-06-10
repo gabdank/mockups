@@ -99,28 +99,34 @@ const App = () => {
   };
 
   const Toggle = ({ isOn, onClick, disabled = false, label }) => (
-    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded border border-gray-200 hover:bg-gray-100 transition-all">
-      <span className={`text-xs font-medium truncate ${disabled ? 'text-gray-400' : 'text-gray-700'}`}>
-        {label}
-      </span>
-      <button
-        onClick={disabled ? undefined : onClick}
-        disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+    <button
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={`w-full text-left py-2 px-2 rounded border transition-all focus:outline-none focus:ring-1 focus:ring-offset-1 ${
+        disabled 
+          ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+          : isOn
+          ? 'bg-green-50 border-green-300 text-green-800 hover:bg-green-100 focus:ring-green-300'
+          : 'bg-red-50 border-red-300 text-red-800 hover:bg-red-100 focus:ring-red-300'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-xs font-medium leading-tight flex-1">
+          {label}
+        </span>
+        <div className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center mt-0.5 ${
           disabled 
-            ? 'bg-gray-300 cursor-not-allowed'
+            ? 'border-gray-300 bg-gray-200'
             : isOn
-            ? 'bg-green-500 focus:ring-green-500'
-            : 'bg-red-500 focus:ring-red-500'
-        }`}
-      >
-        <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-            isOn ? 'translate-x-6' : 'translate-x-1'
-          }`}
-        />
-      </button>
-    </div>
+            ? 'border-green-500 bg-green-500'
+            : 'border-red-400 bg-white'
+        }`}>
+          {isOn && (
+            <div className="w-2 h-2 rounded-full bg-white"></div>
+          )}
+        </div>
+      </div>
+    </button>
   );
 
   const LED = ({ status, size = 'md' }) => {
@@ -217,22 +223,6 @@ const App = () => {
           </div>
         )}
 
-        {/* Progress Bar */}
-        <div className="mb-2">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Progress</span>
-            <span className="text-sm text-gray-500">{progress.passed}/{progress.total}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all duration-500 ${
-                progress.percentage === 100 ? 'bg-green-500' : 
-                progress.percentage > 0 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
-              style={{ width: `${progress.percentage}%` }}
-            />
-          </div>
-        </div>
 
         {/* Toggles */}
         <div className="space-y-1 mb-2">
@@ -308,6 +298,24 @@ const App = () => {
     );
   };
 
+  const Legend = () => {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-3 mb-4">
+        <div className="flex items-center justify-center gap-6">
+          {Object.entries(ResponsibilityColors).map(([key, colors]) => (
+            <div key={key} className="flex items-center space-x-2">
+              <div 
+                className="w-4 h-4 rounded-full border border-gray-300"
+                style={{ backgroundColor: colors.primary }}
+              />
+              <span className="text-xs font-medium text-gray-700">{colors.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   const OverallStatus = () => {
     const allChecks = Object.values(checks).flatMap(stage => Object.values(stage));
     const totalChecks = allChecks.length;
@@ -326,9 +334,9 @@ const App = () => {
             <span className="text-sm font-medium text-gray-700">Completion</span>
             <span className="text-2xl font-bold text-gray-900">{percentage}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
+          <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className={`h-3 rounded-full transition-all duration-1000 ${
+              className={`h-2 rounded-full transition-all duration-1000 ${
                 percentage === 100 ? 'bg-green-500' : 
                 percentage > 50 ? 'bg-yellow-500' : 'bg-red-500'
               }`}
@@ -428,6 +436,8 @@ const App = () => {
             />
           </div>
         </div>
+
+        <Legend />
         
         {/* Remove the custom CSS for scrolling */}
       </div>
