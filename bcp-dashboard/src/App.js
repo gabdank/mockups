@@ -325,7 +325,7 @@ const App = () => {
     return (
       <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-4 mb-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-gray-900">Overall Progress</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Perturb-seq of resting CD4+ T Cells</h2>
           <LED status={percentage === 100 ? 'complete' : percentage > 50 ? 'active' : 'pending'} size="lg" />
         </div>
         
@@ -357,10 +357,9 @@ const App = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-4">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">
+          <h1 className="text-3xl font-bold text-gray-900">
             BCP Data Generation & Deposition
           </h1>
-          <p className="text-base text-gray-600">Perturb-seq of resting CD4+ T Cells</p>
         </div>
 
         <OverallStatus />
