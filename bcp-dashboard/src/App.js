@@ -432,7 +432,7 @@ const App = () => {
             />
             
             <StageCard
-              title="Partner Sequencing"
+              title="Libraries Sequencing"
               stage="stage4"
               checks={checks.stage4}
               stageNumber={4}
