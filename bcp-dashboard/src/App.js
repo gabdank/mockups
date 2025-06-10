@@ -151,6 +151,7 @@ const App = () => {
 
   const ActionButton = ({ type, onClick, disabled = false, label }) => {
     const isDownload = type === 'download';
+    const isBucket = type === 'bucket';
     return (
       <button
         onClick={onClick}
@@ -159,11 +160,13 @@ const App = () => {
           disabled 
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
             : isDownload 
-            ? 'bg-green-500 text-white hover:bg-green-600 focus:ring-green-500 shadow-lg shadow-green-500/25' 
+            ? 'bg-green-500 text-white hover:bg-green-600 focus:ring-green-500 shadow-lg shadow-green-500/25'
+            : isBucket
+            ? 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500 shadow-lg shadow-orange-500/25'
             : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500 shadow-lg shadow-blue-500/25'
         }`}
       >
-        {label || (isDownload ? '⬇ Download' : '⬆ Submit')}
+        {label || (isDownload ? '⬇ Download' : isBucket ? '🪣 S3 bucket' : '⬆ Submit')}
       </button>
     );
   };
@@ -182,7 +185,7 @@ const App = () => {
     };
 
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 ${colors.glow} shadow-lg hover:shadow-xl transition-all p-2 w-40 flex flex-col`}>
+      <div className={`bg-white rounded-lg border border-gray-200 ${colors.glow} shadow-lg hover:shadow-xl transition-all p-2 ${responsibility === 'partner' ? 'w-44' : 'w-40'} flex flex-col relative z-20`}>
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center space-x-3">
@@ -201,27 +204,25 @@ const App = () => {
         </div>
 
         {/* Title */}
-        <h3 className="text-xs font-semibold text-gray-900 mb-1 leading-tight">
+        <h3 className="text-xs font-semibold text-gray-900 mb-1 leading-tight h-8 flex items-center">
           {title}
         </h3>
 
         {/* Input/Output */}
-        {(input || output) && (
-          <div className="mb-1 text-xs space-y-1">
-            {input && (
-              <div className="p-1 bg-green-50 rounded border-l-2 border-green-400">
-                <span className="font-semibold text-green-700">IN: </span>
-                <span className="text-green-600 text-xs">{input}</span>
-              </div>
-            )}
-            {output && (
-              <div className="p-1 bg-blue-50 rounded border-l-2 border-blue-400">
-                <span className="font-semibold text-blue-700">OUT: </span>
-                <span className="text-blue-600 text-xs">{output}</span>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="mb-1 text-xs space-y-1 min-h-[3rem]">
+          {input && (
+            <div className="p-1 bg-purple-50 rounded border-l-2 border-purple-400">
+              <span className="font-semibold text-purple-700">IN: </span>
+              <span className="text-purple-600 text-xs">{input}</span>
+            </div>
+          )}
+          {output && (
+            <div className="p-1 bg-blue-50 rounded border-l-2 border-blue-400">
+              <span className="font-semibold text-blue-700">OUT: </span>
+              <span className="text-blue-600 text-xs">{output}</span>
+            </div>
+          )}
+        </div>
 
 
         {/* Toggles */}
@@ -231,7 +232,7 @@ const App = () => {
               key={key}
               isOn={value}
               onClick={() => toggleCheck(stage, key)}
-              label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+              label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/Q C/g, 'QC')}
               disabled={blocked}
             />
           ))}
@@ -271,6 +272,14 @@ const App = () => {
               label="⬆ Submit"
             />
           )}
+          {[4, 6, 7].includes(stageNumber) && (
+            <ActionButton 
+              type="bucket" 
+              onClick={() => alert('Accessing S3 bucket...')}
+              disabled={blocked}
+              label="🪣 S3 bucket"
+            />
+          )}
         </div>
 
         {/* Status */}
@@ -294,6 +303,33 @@ const App = () => {
             </span>
           </div>
         </div>
+      </div>
+    );
+  };
+
+  const FieldConnector = ({ fromStage, toStage, hasOutput, hasInput }) => {
+    if (!hasOutput || !hasInput) return null;
+    
+    // Calculate positions for output and input sub-elements
+    const cardWidth = 14.28; // 100% / 7 cards
+    const outputX = fromStage * cardWidth + cardWidth * 0.95; // Right edge of output field
+    const inputX = toStage * cardWidth + cardWidth * 0.05; // Left edge of input field
+    const outputY = 32; // Position of output sub-element
+    const inputY = 28; // Position of input sub-element
+    
+    return (
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 25 }}>
+        <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <line
+            x1={outputX}
+            y1={outputY}
+            x2={inputX}
+            y2={inputY}
+            stroke="#6B7280"
+            strokeWidth="0.5"
+            opacity="0.7"
+          />
+        </svg>
       </div>
     );
   };
@@ -324,29 +360,24 @@ const App = () => {
     
     return (
       <div className="bg-white rounded-lg border border-gray-200 shadow-lg p-4 mb-4">
-        <div className="flex items-center justify-between mb-4">
+        {/* Line 1: Title, percentage, and status dot */}
+        <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-semibold text-gray-900">Perturb-seq of resting CD4+ T Cells</h2>
-          <LED status={percentage === 100 ? 'complete' : percentage > 50 ? 'active' : 'pending'} size="lg" />
-        </div>
-        
-        <div className="mb-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">Completion</span>
+          <div className="flex items-center space-x-3">
             <span className="text-2xl font-bold text-gray-900">{percentage}%</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div
-              className={`h-2 rounded-full transition-all duration-1000 ${
-                percentage === 100 ? 'bg-green-500' : 
-                percentage > 50 ? 'bg-yellow-500' : 'bg-red-500'
-              }`}
-              style={{ width: `${percentage}%` }}
-            />
+            <LED status={percentage === 100 ? 'complete' : percentage > 50 ? 'active' : 'pending'} size="lg" />
           </div>
         </div>
         
-        <div className="text-sm text-gray-600">
-          {passedChecks} of {totalChecks} tasks completed
+        {/* Line 2: Progress bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div
+            className={`h-2 rounded-full transition-all duration-1000 ${
+              percentage === 100 ? 'bg-green-500' : 
+              percentage > 50 ? 'bg-yellow-500' : 'bg-red-500'
+            }`}
+            style={{ width: `${percentage}%` }}
+          />
         </div>
       </div>
     );
